@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source picto/env/bin/activate
+source ../picto/env/bin/activate
 
 #  Lancement  du test de validation du Juge
 python3 - << 'EOF'
@@ -15,8 +15,8 @@ import os
 validator = ArasaacValidator()
 
 # On prend une image Arasaac et son équivalent SDXL
-picto_path = "picto/picto774/2531.png"
-photo_path = "picto/images_real/2531.png"
+picto_path = "../picto/picto774/3051.png"
+photo_path = "../picto/images_real/3051.png"
 prompt = "Concave brass disks struck together or with sticks, producing loud crashing sounds."
 
 def check_score(path, label):

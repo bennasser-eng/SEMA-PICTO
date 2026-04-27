@@ -16,7 +16,7 @@ from transformers import BitsAndBytesConfig #quantisation to avoid killing
     bnb_4bit_use_double_quant=True
 )"""
 
-token = ''
+token = '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'
 
 model_names = ["camembert-base" , "PantagrueLLM/text-base-wiki", "xlm-roberta-base"]
 

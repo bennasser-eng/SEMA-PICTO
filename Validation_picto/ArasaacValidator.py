@@ -53,15 +53,15 @@ class ArasaacValidator:
         self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").to(device)  # SOTA today
         self.clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
         self.lpips_vgg = lpips.LPIPS(net='vgg').to(device)
-       
+    
         #  Model pour le SENS : MobileViT (Léger et Rapide)
         self.sense_ckpt = "apple/mobilevit-small"
         self.sense_processor = MobileViTImageProcessor.from_pretrained(self.sense_ckpt)
         self.sense_model = MobileViTForImageClassification.from_pretrained(self.sense_ckpt).to(device)
 
         # Métrique Distributionnelle (KID)
-        # subset_size=50 pour la stabilité statistique sur petits échantillons
-        self.kid_metric = KernelInceptionDistance(subset_size=15, normalize=True).to(device)
+        # subset_size=50 pour la stabilité statistique
+        self.kid_metric = KernelInceptionDistance(subset_size=50, normalize=True).to(device)
        
 
         # CHARGEMENT DU JUGE MLP ---
