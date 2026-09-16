@@ -45,18 +45,16 @@ SEMA-PICTO/
 ### Prerequisites
 
 This project is based on modern deep learning tooling and expects a Python environment with:
-
-    * Python 3.9+
-    * PyTorch
-    * Diffusers
-    * Transformers
-    * Accelerate
-    * PEFT / LoRA support
-    * CUDA-enabled GPU recommended for training and inference
+* Python 3.9+
+* PyTorch
+* Diffusers
+* Transformers
+* Accelerate
+* PEFT / LoRA support
+* CUDA-enabled GPU recommended for training and inference
 
 The repository contains scripts that assume a virtual environment is already activated, for example:
 bash
-
 source ../picto/env/bin/activate
 
 Clone the Repository:
