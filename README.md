@@ -1,10 +1,4 @@
-# SEMA-PICTO
-# A Multimodal Framework for Semantic Alignment and Controlled Pictogram Generation
-
-# SEMA-PICTO
-
-A Multimodal Framework for Semantic Alignment and Controlled Pictogram Generation
-
+# SEMA-PICTO: A Multimodal Framework for Semantic Alignment and Controlled Pictogram Generation
 SEMA-PICTO is a research-oriented multimodal pipeline for generating pictograms from semantic concepts and textual descriptions. The project combines language understanding, semantic alignment, and controlled image generation to produce pictograms that are both visually consistent and semantically relevant.
 
 This repository includes training scripts, inference pipelines, validation tools, benchmark experiments, and examples of successful and failed generations.
@@ -38,35 +32,131 @@ The project is designed around:
 SEMA-PICTO/
 ├── Article_SEMA_Pipeline.pdf        # Research article / pipeline description
 ├── NER-Benchmark/                   # Benchmarking experiments for named entity recognition
-│   ├── benchmark.py
-│   ├── benchmark.sh
-│   ├── dataset.py
-│   ├── metrics.py
-│   ├── models.py
-│   ├── NER.ipynb
-│   └── NamedEntityRecognition.ipynb
 ├── Validation_picto/                # Validation and judging scripts
-│   ├── ArasaacValidator.py
-│   ├── dataset_judge.csv
-│   ├── normalization_stats.csv
-│   ├── prepare_judge_dataset.sh
-│   ├── test_judge.sh
-│   ├── train_judge.sh
-│   └── arasaac_judge_final.pth
 ├── fine_tune_lora/                  # LoRA fine-tuning pipeline
-│   ├── dataset_picto/
-│   ├── lora_picto_model/
-│   ├── inference_lora.sh
-│   ├── lancer_lora.sh
-│   ├── train_lora.py
-│   ├── train_lora.sh
-│   ├── train_lora_opt.py
-│   ├── train_lora_opt.sh
-│   ├── train_text_to_image_lora.py
-│   └── test_text_to_image_lora.py
 ├── inference_lora/                  # Inference experiments and checkpoints
 ├── success_cases/                   # Examples of successful generated pictograms
 ├── faillures_cases/                 # Examples of failure cases and problematic outputs
 ├── README.md
 ├── .gitignore
-└── LICENSE                         # if present in your local clone
+```
+
+## Getting Started
+### Prerequisites
+
+This project is based on modern deep learning tooling and expects a Python environment with:
+
+    * Python 3.9+
+    * PyTorch
+    * Diffusers
+    * Transformers
+    * Accelerate
+    * PEFT / LoRA support
+    * CUDA-enabled GPU recommended for training and inference
+
+The repository contains scripts that assume a virtual environment is already activated, for example:
+bash
+
+source ../picto/env/bin/activate
+
+Clone the Repository:
+git clone https://github.com/bennasser-eng/SEMA-PICTO.git
+cd SEMA-PICTO
+
+
+### Install Dependencies
+Install the required packages for your local setup, including the libraries needed for:
+* model loading,
+* LoRA fine-tuning,
+* image generation,
+* validation and dataset processing.
+
+**Typical dependencies include:**
+pip install torch torchvision diffusers transformers accelerate peft safetensors
+
+If your environment already contains the required packages, you can skip this step and proceed directly to training or inference.
+Training
+
+The fine-tuning workflow is implemented in the fine_tune_lora directory.
+
+A typical training launch is defined in:
+bash
+
+bash fine_tune_lora/train_lora.sh
+
+This script executes training with a dataset configured through:
+
+    --train_data_dir
+    --val_data_dir
+    --test_data_dir
+    --output_dir
+    --batch_size
+    --num_epochs
+    --lambda_reward
+    --kid_samples
+
+Example configuration from the project:
+bash
+
+python train_lora.py \
+    --train_data_dir ./dataset_picto/dataset_final/train \
+    --val_data_dir ./dataset_picto/dataset_final/val \
+    --test_data_dir ./dataset_picto/dataset_final/test \
+    --output_dir ./epochs500_rank64_alpha64_lamda5_loss_avec_-score \
+    --batch_size 16 \
+    --num_epochs 500 \
+    --lambda_reward 5.0 \
+    --kid_samples 200
+
+
+
+### Inference
+Inference scripts are available in the fine_tune_lora and inference_lora folders.
+A representative example can be launched with:
+**bash fine_tune_lora/inference_lora.sh**
+
+This script loads a pretrained Stable Diffusion model, applies a LoRA adapter, and generates multiple pictogram-like outputs from input prompts.
+
+The generated images are saved under an output directory such as:
+**fine_tune_lora/outputs_inference/**
+or within folders created under inference_lora/.
+
+
+### Validation and Evaluation
+The project includes a validation pipeline for pictogram quality assessment.
+The Validation_picto/ directory contains scripts and datasets for evaluating generated outputs, including:
+* dataset preparation,
+* judge model training,
+* validation checks,
+* normalization statistics,
+* dataset CSV files.
+**Important files include:**
+_ ArasaacValidator.py
+_ prepare_judge_dataset.sh
+_ train_judge.sh
+_ test_judge.sh
+
+
+
+### NER Benchmark
+The NER-Benchmark/ directory contains benchmark scripts and notebooks for named entity recognition experiments, including:
+* benchmark.py
+* dataset.py
+* metrics.py
+* models.py
+* Jupyter notebooks for exploratory analysis and benchmark execution
+This part of the repository supports semantic analysis of text and can be used to evaluate concept extraction and entity-related tasks relevant to pictogram generation.
+
+
+
+### Examples and Qualitative Results
+The repository contains visual examples that illustrate the model’s outputs:
+* success_cases/        — examples of successful generations
+* faillures_cases/      — examples of failure cases and limitations
+
+
+These folders are useful for qualitative inspection, debugging, and understanding the model’s strengths and weaknesses across different prompts.
+
+### Research Context
+This project is associated with a research paper: **Article_SEMA_Pipeline.pdf**.
+The repository is intended for research, experimentation, and reproducibility, especially in the context of multimodal generation and semantic alignment.
