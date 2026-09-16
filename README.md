@@ -74,16 +74,16 @@ Install the required packages for your local setup, including the libraries need
 * validation and dataset processing.
 ```
 **Typical dependencies include:**
-pip install torch torchvision diffusers transformers accelerate peft safetensors
+**pip install torch torchvision diffusers transformers accelerate peft safetensors**
 
 If your environment already contains the required packages, you can skip this step and proceed directly to training or inference.
-Training
 
-The fine-tuning workflow is implemented in the fine_tune_lora directory.
+### Training
+The fine-tuning workflow is implemented in the **fine_tune_lora** directory.
 
 A typical training launch is defined in:
 ```text
-bash fine_tune_lora/train_lora.sh
+fine_tune_lora/train_lora.sh
 ```
 This script executes training with a dataset configured through:
 ```text
@@ -114,7 +114,7 @@ python train_lora.py \
 ### Inference
 Inference scripts are available in the fine_tune_lora and inference_lora folders.
 A representative example can be launched with:
-**bash fine_tune_lora/inference_lora.sh**
+**fine_tune_lora/inference_lora.sh**
 
 This script loads a pretrained Stable Diffusion model, applies a LoRA adapter, and generates multiple pictogram-like outputs from input prompts.
 
@@ -148,7 +148,7 @@ The NER-Benchmark/ directory contains benchmark scripts and notebooks for named 
 * metrics.py
 * models.py
 * Jupyter notebooks for exploratory analysis and benchmark execution
-```text
+```
 This part of the repository supports semantic analysis of text and can be used to evaluate concept extraction and entity-related tasks relevant to pictogram generation.
 
 
