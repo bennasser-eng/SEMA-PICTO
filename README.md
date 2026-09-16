@@ -86,6 +86,7 @@ bash fine_tune_lora/train_lora.sh
 
 This script executes training with a dataset configured through:
 
+python fine_tune_lora.py \
     --train_data_dir
     --val_data_dir
     --test_data_dir
@@ -96,7 +97,6 @@ This script executes training with a dataset configured through:
     --kid_samples
 
 Example configuration from the project:
-bash
 
 python train_lora.py \
     --train_data_dir ./dataset_picto/dataset_final/train \
