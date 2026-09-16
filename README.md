@@ -160,13 +160,16 @@ The repository contains visual examples that illustrate the model’s outputs:
 * faillures_cases/      — examples of failure cases and limitations
 ```
 
-#### Selected Successful Generations
+### Selected Generations
 The following examples highlight successful pictogram generations covering recognition, medical, time-related, and everyday concepts:
 
-| Award recognition | Medical diagnosis | Time of day | Kitchen appliance |
-|:---:|:---:|:---:|:---:|
+| Award recognition | Medical diagnosis |
+|:---:|:---:|
+| ![Award recognition](success_cases/test_0_Award_recognizing_championship.png) | ![Medical specialist diagnosing](success_cases/test_6_Medical_specialist_diagnosing_.png)|
 
-| ![Award recognition](success_cases/test_0_Award_recognizing_championship.png) | ![Medical specialist diagnosing](success_cases/test_6_Medical_specialist_diagnosing_.png) | ![Specific time of day](success_cases/test_11_A_specific_time_of_day_indicat.png) | ![Kitchen appliance](success_cases/test_2_Kitchen_appliance_that_cooks_f.png)|
+| Time of day | Kitchen appliance |
+|:---:|:---:|
+| ![Specific time of day](success_cases/test_11_A_specific_time_of_day_indicat.png) | ![Kitchen appliance](success_cases/test_2_Kitchen_appliance_that_cooks_f.png)|
 
 
 ### Research Context
