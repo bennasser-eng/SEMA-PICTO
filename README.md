@@ -45,6 +45,7 @@ SEMA-PICTO/
 ### Prerequisites
 
 This project is based on modern deep learning tooling and expects a Python environment with:
+```text
 * Python 3.9+
 * PyTorch
 * Diffusers
@@ -52,23 +53,26 @@ This project is based on modern deep learning tooling and expects a Python envir
 * Accelerate
 * PEFT / LoRA support
 * CUDA-enabled GPU recommended for training and inference
+```
 
 The repository contains scripts that assume a virtual environment is already activated, for example:
-bash
+```text
 source ../picto/env/bin/activate
-
+```
 Clone the Repository:
+```text
 git clone https://github.com/bennasser-eng/SEMA-PICTO.git
 cd SEMA-PICTO
-
+```
 
 ### Install Dependencies
 Install the required packages for your local setup, including the libraries needed for:
+```text
 * model loading,
 * LoRA fine-tuning,
 * image generation,
 * validation and dataset processing.
-
+```
 **Typical dependencies include:**
 pip install torch torchvision diffusers transformers accelerate peft safetensors
 
@@ -78,12 +82,11 @@ Training
 The fine-tuning workflow is implemented in the fine_tune_lora directory.
 
 A typical training launch is defined in:
-bash
-
+```text
 bash fine_tune_lora/train_lora.sh
-
+```
 This script executes training with a dataset configured through:
-
+```text
 python fine_tune_lora.py \
     --train_data_dir
     --val_data_dir
@@ -93,9 +96,9 @@ python fine_tune_lora.py \
     --num_epochs
     --lambda_reward
     --kid_samples
-
+```
 Example configuration from the project:
-
+```text
 python train_lora.py \
     --train_data_dir ./dataset_picto/dataset_final/train \
     --val_data_dir ./dataset_picto/dataset_final/val \
@@ -105,7 +108,7 @@ python train_lora.py \
     --num_epochs 500 \
     --lambda_reward 5.0 \
     --kid_samples 200
-
+```
 
 
 ### Inference
@@ -123,6 +126,7 @@ or within folders created under inference_lora/.
 ### Validation and Evaluation
 The project includes a validation pipeline for pictogram quality assessment.
 The Validation_picto/ directory contains scripts and datasets for evaluating generated outputs, including:
+```text
 * dataset preparation,
 * judge model training,
 * validation checks,
@@ -133,26 +137,28 @@ _ ArasaacValidator.py
 _ prepare_judge_dataset.sh
 _ train_judge.sh
 _ test_judge.sh
-
+```
 
 
 ### NER Benchmark
 The NER-Benchmark/ directory contains benchmark scripts and notebooks for named entity recognition experiments, including:
+```text
 * benchmark.py
 * dataset.py
 * metrics.py
 * models.py
 * Jupyter notebooks for exploratory analysis and benchmark execution
-
+```text
 This part of the repository supports semantic analysis of text and can be used to evaluate concept extraction and entity-related tasks relevant to pictogram generation.
 
 
 
 ### Examples and Qualitative Results
 The repository contains visual examples that illustrate the model’s outputs:
+```text
 * success_cases/        — examples of successful generations
 * faillures_cases/      — examples of failure cases and limitations
-
+```
 
 These folders are useful for qualitative inspection, debugging, and understanding the model’s strengths and weaknesses across different prompts.
 
