@@ -30,10 +30,10 @@ def parse_args():
     parser.add_argument("--output_dir", type=str, default="./lora_model")
     parser.add_argument("--resolution", type=int, default=512)
     parser.add_argument("--batch_size", type=int, default=16)
-    parser.add_argument("--learning_rate", type=float, default=1e-4)
-    parser.add_argument("--num_epochs", type=int, default=10)
-    parser.add_argument("--rank", type=int, default=4)
-    parser.add_argument("--lambda_reward", type=float, default=10.0)
+    parser.add_argument("--learning_rate", type=float, default=5e-5)
+    parser.add_argument("--num_epochs", type=int, default=100)
+    parser.add_argument("--rank", type=int, default=64) # hyperparams !!!!!!!!!!!!
+    parser.add_argument("--lambda_reward", type=float, default=10.0) #hyperparams !!!!!!!!!!
     parser.add_argument("--kid_samples", type=int, default=200, help="Nombre d'images pour KID")
     return parser.parse_args()
 
@@ -44,16 +44,15 @@ class LoRATrainer:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
         print(f"Initialisation sur {self.device}")
-        print(f"Lambda reward: {args.lambda_reward}")
+        # print(f"Lambda reward: {args.lambda_reward}")
         
         self.pipe = StableDiffusionPipeline.from_pretrained(
             args.pretrained_model_name,
             torch_dtype=torch.float16,
             safety_checker=None
         ).to(self.device)
-        
         self.vae = self.pipe.vae
-        self.text_encoder = self.pipe.text_encoder
+        self.text_encoder = self.pipe.text_encoder 
         self.tokenizer = self.pipe.tokenizer
         self.unet = self.pipe.unet
         
@@ -63,10 +62,12 @@ class LoRATrainer:
         
         lora_config = LoraConfig(
             r=args.rank,
-            lora_alpha=args.rank,
+            lora_alpha=args.rank, #//2
             target_modules=["to_q", "to_k", "to_v", "to_out.0"],
         )
         self.unet = get_peft_model(self.unet, lora_config)
+        self.pipe.unet = self.unet
+        self.pipe = self.pipe.to(self.device)
         self.unet.print_trainable_parameters()
         
         self.validator = ArasaacValidator(device=self.device)
@@ -77,12 +78,12 @@ class LoRATrainer:
         )
         
         self.train_loader = self._load_dataset(args.train_data_dir, shuffle=True)
-        self.val_loader = self._load_dataset(args.val_data_dir, shuffle=False)
+        self.val_loader = self._load_dataset(args.val_data_dir, shuffle=True)
         self.test_loader = self._load_dataset(args.test_data_dir, shuffle=False)
         
         self.history = []
 
-    def _load_dataset(self, data_dir, shuffle):
+    def _load_dataset_csv(self, data_dir, shuffle):
         metadata_path = os.path.join(data_dir, "metadata.csv")
         images_dir = os.path.join(data_dir, "images")
         
@@ -139,8 +140,104 @@ class LoRATrainer:
         dataset = PictoDataset(data, images_dir, transform, self.tokenizer, self.tokenizer.model_max_length)
         return DataLoader(dataset, batch_size=self.args.batch_size, shuffle=shuffle)
     
+
+    def _load_dataset(self, data_dir, shuffle):
+        # On cherche le fichier JSONL
+        metadata_path = os.path.join(data_dir, "metadata.jsonl")
+        images_dir = os.path.join(data_dir, "images")
+        
+        if not os.path.exists(metadata_path):
+            print(f" ERREUR : Fichier introuvable -> {metadata_path}")
+            sys.exit(1)
+            
+        # Chargement des données JSONL
+        data = []
+        try:
+            with open(metadata_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    if line.strip():    # Évite les lignes vides
+                        data.append(json.loads(line))
+        except Exception as e:
+            print(f" ERREUR lors de la lecture du JSONL : {e}")
+            sys.exit(1)
+            
+        print(f"Chargement réussi : {len(data)} images trouvées dans {data_dir}")
+        
+        if shuffle:
+            random.shuffle(data)
+        
+        # Définition des transformations (Prêt pour le Validator)
+        transform = transforms.Compose([
+            transforms.Resize(self.args.resolution, interpolation=transforms.InterpolationMode.BILINEAR),
+            transforms.CenterCrop(self.args.resolution),
+            transforms.ToTensor(),
+            transforms.Normalize([0.5], [0.5]), # Standard pour Stable Diffusion
+        ])
+        
+        # Classe Dataset Interne
+        class PictoDataset(Dataset):
+            def __init__(self, data, images_dir, transform, tokenizer, max_length):
+                self.data = data
+                self.images_dir = images_dir
+                self.transform = transform
+                self.tokenizer = tokenizer
+                self.max_length = max_length
+            
+            def __len__(self):
+                return len(self.data)
+            
+            def __getitem__(self, idx):
+                row = self.data[idx]
+                img_name = row["file_name"]
+                img_path = os.path.join(self.images_dir, img_name)
+                
+                # Chargement de l'image
+                try:
+                    img = Image.open(img_path).convert("RGB")
+                    img = self.transform(img)
+                except Exception as e:
+                    print(f"Alerte : Impossible de lire {img_path}, erreur: {e}")
+                    # return un exemple aleatoire
+                    return self.__getitem__(random.randint(0, len(self.data)-1))
+                    
+                # Tokenization du texte (Description riche)
+                tokens = self.tokenizer(
+                    row["text"],
+                    max_length=self.max_length,
+                    padding="max_length",
+                    truncation=True,
+                    return_tensors="pt"
+                )
+               
+                return {
+                    "pixel_values": img,
+                    "input_ids": tokens.input_ids.squeeze(0),
+                    "text": row["text"]
+                }
+        
+        dataset = PictoDataset(
+            data=data, 
+            images_dir=images_dir, 
+            transform=transform, 
+            tokenizer=self.tokenizer, 
+            max_length=self.tokenizer.model_max_length
+        )
+        
+        return DataLoader(
+            dataset, 
+            batch_size=self.args.batch_size, 
+            shuffle=shuffle,
+            num_workers=2,           # Optimise la lecture disque
+            drop_last=True     # Évite les problèmes de dimension sur le dernier batch
+        )
+
+
+
     def compute_loss(self, noise_pred, noise, images, prompts):
         loss_diffusion = F.mse_loss(noise_pred, noise)
+        
+        if not images:      # Si la liste est vide
+            return loss_diffusion, 0.0
         
         judge_scores = []
         for img , prompt in zip(images, prompts):
@@ -148,10 +245,13 @@ class LoRATrainer:
             judge_scores.append(score)
         
         mean_judge_score = np.mean(judge_scores)
+        #loss = loss_diffusion * (mean_judge_score) * self.args.lambda_reward
         loss = loss_diffusion * (1 - mean_judge_score) * self.args.lambda_reward
-        
+        #loss = loss_diffusion * (1/(mean_judge_score + 1e-6)) * self.args.lambda_reward
+        #loss = loss_diffusion
         return loss, mean_judge_score
     
+
     def generate_images(self, prompts, num_inference_steps=30):
         images = []
         for prompt in prompts:
@@ -173,7 +273,7 @@ class LoRATrainer:
         gen_tensors = []
         for img in generated_images:
             img_tensor = torch.from_numpy(np.array(img)).permute(2, 0, 1).unsqueeze(0).float().to(self.device)
-            img_tensor = (img_tensor / 127.5) - 1.0
+            img_tensor = (img_tensor / 255)  # img_tensor will be in [0,1]
             gen_tensors.append(img_tensor)
         gen_tensors = torch.cat(gen_tensors, dim=0)
         self.validator.kid_metric.update(gen_tensors, real=False)
@@ -202,16 +302,17 @@ class LoRATrainer:
         generated_subset = self.generate_images(prompts_subset)
         
         self.validator.kid_metric.reset()
-        self.validator.kid_metric.update(all_real, real=True)
+        real_images = (all_real.detach().cpu() + 1.0) / 2.0 #on les met en [0,1]
+        self.validator.kid_metric.update(real_images.to(self.device), real=True)
         
         gen_tensors = []
         for img in generated_subset:
             img_tensor = torch.from_numpy(np.array(img)).permute(2, 0, 1).unsqueeze(0).float().to(self.device)
-            img_tensor = (img_tensor / 127.5) - 1.0
+            img_tensor = (img_tensor / 255)
             gen_tensors.append(img_tensor)
         gen_tensors = torch.cat(gen_tensors, dim=0)
         self.validator.kid_metric.update(gen_tensors, real=False)
-        
+       
         kid_mean, kid_std = self.validator.kid_metric.compute()
         
         kid_mean = kid_mean.item() if hasattr(kid_mean, 'item') else kid_mean
@@ -244,13 +345,15 @@ class LoRATrainer:
             prompts = batch["text"]
             
             generated_images = self.generate_images(prompts)
-            
-            self.validator.kid_metric.update(real_images, real=True)
+
+            real_images = (real_images.detach().cpu() + 1.0) / 2.0
+            self.validator.kid_metric.update(real_images.to(self.device), real=True)
+           
             
             gen_tensors = []
             for img in generated_images:
                 img_tensor = torch.from_numpy(np.array(img)).permute(2, 0, 1).unsqueeze(0).float().to(self.device)
-                img_tensor = (img_tensor / 127.5) - 1.0
+                img_tensor = (img_tensor / 255) 
                 gen_tensors.append(img_tensor)
             gen_tensors = torch.cat(gen_tensors, dim=0)
             self.validator.kid_metric.update(gen_tensors, real=False)
@@ -304,8 +407,9 @@ class LoRATrainer:
                 
                 noise_pred = self.unet(noisy_latents, timesteps, encoder_hidden_states).sample
                 
-                images_pil = [transforms.ToPILImage()((img.cpu() + 1) / 2) for img in pixel_values]
-                loss, mean_judge = self.compute_loss(noise_pred, noise, images_pil, prompts)
+                images_gen = self.generate_images(prompts) #necessaire si on ajoute le score en loss 
+                #images_gen = []
+                loss, mean_judge = self.compute_loss(noise_pred, noise, images_gen, prompts)
                 
                 self.optimizer.zero_grad()
                 loss.backward()

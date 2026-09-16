@@ -1,0 +1,21 @@
+# Caches et checkpoints
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Sorties de jobs cluster (Ensimag / OAR)
+*.stdout
+*.stderr
+OAR.*
+
+# Dossiers de données lourdes et modèles
+Data_Picto/
+inference_lora/
+Results/
+Resultats/
+
+# Formats volumineux
+*.png
+*.jpg
+*.jpeg
+*.pdf
