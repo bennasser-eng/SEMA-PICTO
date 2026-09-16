@@ -145,6 +145,7 @@ The NER-Benchmark/ directory contains benchmark scripts and notebooks for named 
 * metrics.py
 * models.py
 * Jupyter notebooks for exploratory analysis and benchmark execution
+
 This part of the repository supports semantic analysis of text and can be used to evaluate concept extraction and entity-related tasks relevant to pictogram generation.
 
 
